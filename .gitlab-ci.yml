@@ -17,9 +17,5 @@ build-image:
       changes:
         - src/**/*
     - when: manual
-  before_script:
-    - docker login -u "$REGISTRY_USER" -p "$REGISTRY_PASSWORD" jookos.org
   script:
     - docker build -t $IMAGE:$TAG -t $IMAGE:latest .
-    - docker push $IMAGE:$TAG
-    - docker push $IMAGE:latest
