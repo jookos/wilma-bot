@@ -29,7 +29,7 @@ from wilma_bot.client.models import (
 
 logger = logging.getLogger(__name__)
 
-SUPPORTED_API_VERSIONS = {18, 19, 20}
+SUPPORTED_API_VERSIONS = {18, 19, 20, 30}
 SERVER_LIST_URL = "https://wilmahub.service.inschool.fi/wilmat"
 USER_AGENT = "WilmaBot.py/0.1.0"
 
