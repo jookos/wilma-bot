@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 SUPPORTED_API_VERSIONS = {18, 19, 20}
 SERVER_LIST_URL = "https://wilmahub.service.inschool.fi/wilmat"
-USER_AGENT = "OpenWilma.py/0.1.0"
+USER_AGENT = "WilmaBot.py/0.1.0"
 
 
 # ---------------------------------------------------------------------------

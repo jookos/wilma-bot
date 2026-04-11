@@ -1,14 +1,13 @@
-"""Tests for MCP tool handlers."""
+"""Tests for MCP tool functions via the FastMCP server."""
 
+import datetime
 import json
 from unittest.mock import MagicMock
 
 import pytest
 
 from wilma_bot.client.models import Schedule, ScheduleEvent, ScheduleEventDate, ScheduleEventDetails, Term
-from wilma_bot.mcp.tools import REGISTRY
-
-import datetime
+from wilma_bot.mcp.server import create_server
 
 
 @pytest.fixture()
@@ -17,7 +16,6 @@ def mock_client() -> MagicMock:
     client.get_messages.return_value = [{"id": 1, "subject": "Hello"}]
     client.get_notices.return_value = [{"title": "Test notice"}]
 
-    # Build a minimal Schedule object
     event = ScheduleEvent(
         id=1,
         date=ScheduleEventDate(
@@ -48,35 +46,30 @@ def mock_client() -> MagicMock:
     return client
 
 
-@pytest.mark.asyncio
-async def test_get_messages(mock_client: MagicMock) -> None:
-    result = await REGISTRY["get_messages"](mock_client, {})
-    assert len(result) == 1
-    data = json.loads(result[0].text)
-    assert data[0]["subject"] == "Hello"
+@pytest.fixture()
+def tools(mock_client: MagicMock) -> dict:
+    """Return a dict of {tool_name: fn} extracted from the FastMCP server."""
+    app = create_server(mock_client)
+    # FastMCP stores tools in ._tool_manager._tools
+    return {name: t.fn for name, t in app._tool_manager._tools.items()}
 
 
-@pytest.mark.asyncio
-async def test_get_schedule_no_date(mock_client: MagicMock) -> None:
-    result = await REGISTRY["get_schedule"](mock_client, {})
-    assert len(result) == 1
-    data = json.loads(result[0].text)
-    assert len(data["events"]) == 1
-    assert data["events"][0]["short_name"] == "Math"
-    assert len(data["terms"]) == 1
+def test_get_messages(tools: dict, mock_client: MagicMock) -> None:
+    result = json.loads(tools["get_messages"]())
+    assert result[0]["subject"] == "Hello"
+
+
+def test_get_schedule_no_date(tools: dict, mock_client: MagicMock) -> None:
+    result = json.loads(tools["get_schedule"]())
+    assert result["events"][0]["short_name"] == "Math"
     mock_client.get_schedule.assert_called_once_with(date=None)
 
 
-@pytest.mark.asyncio
-async def test_get_schedule_with_date(mock_client: MagicMock) -> None:
-    result = await REGISTRY["get_schedule"](mock_client, {"date": "2024-01-15"})
-    assert len(result) == 1
+def test_get_schedule_with_date(tools: dict, mock_client: MagicMock) -> None:
+    tools["get_schedule"](date="2024-01-15")
     mock_client.get_schedule.assert_called_once_with(date=datetime.date(2024, 1, 15))
 
 
-@pytest.mark.asyncio
-async def test_get_notices(mock_client: MagicMock) -> None:
-    result = await REGISTRY["get_notices"](mock_client, {})
-    assert len(result) == 1
-    data = json.loads(result[0].text)
-    assert data[0]["title"] == "Test notice"
+def test_get_notices(tools: dict, mock_client: MagicMock) -> None:
+    result = json.loads(tools["get_notices"]())
+    assert result[0]["title"] == "Test notice"

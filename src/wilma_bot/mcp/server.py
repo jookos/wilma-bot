@@ -1,40 +1,46 @@
-"""MCP server wiring."""
+"""MCP server wiring (FastMCP)."""
 
 from __future__ import annotations
 
+import datetime
+import json
 import logging
 
-from mcp.server import Server
-from mcp.server.models import InitializationOptions
-from mcp.types import ServerCapabilities, Tool, ToolsCapability
+from mcp.server.fastmcp import FastMCP
 
 from wilma_bot.client import WilmaClient
-from wilma_bot.mcp import tools as tool_handlers
 
 logger = logging.getLogger(__name__)
 
 
-def create_server(client: WilmaClient) -> Server:
-    """Instantiate and configure the MCP server."""
-    server: Server = Server("wilma-bot")
+def create_server(client: WilmaClient) -> FastMCP:
+    """Instantiate and configure the FastMCP server."""
+    app = FastMCP("wilma-bot")
 
-    @server.list_tools()
-    async def list_tools() -> list[Tool]:
-        return tool_handlers.TOOLS
+    @app.tool()
+    def get_messages() -> str:
+        """Fetch the inbox message list from Wilma."""
+        messages = client.get_messages()
+        return json.dumps(messages, ensure_ascii=False, indent=2)
 
-    @server.call_tool()
-    async def call_tool(name: str, arguments: dict) -> object:  # type: ignore[type-arg]
-        handler = tool_handlers.REGISTRY.get(name)
-        if handler is None:
-            raise ValueError(f"Unknown tool: {name!r}")
-        return await handler(client, arguments)
+    @app.tool()
+    def get_schedule(date: str | None = None) -> str:
+        """Fetch the week schedule and school terms from Wilma.
 
-    return server
+        Returns parsed lesson events with teacher, room, and time details.
 
+        Args:
+            date: ISO 8601 date (YYYY-MM-DD) for any day within the desired week.
+                  Defaults to today if omitted.
+        """
+        parsed_date = datetime.date.fromisoformat(date) if date else None
+        schedule = client.get_schedule(date=parsed_date)
+        return json.dumps(schedule.model_dump(mode="json"), ensure_ascii=False, indent=2)
 
-def get_initialization_options(server: Server) -> InitializationOptions:
-    return InitializationOptions(
-        server_name="wilma-bot",
-        server_version="0.1.0",
-        capabilities=ServerCapabilities(tools=ToolsCapability(listChanged=False)),
-    )
+    @app.tool()
+    def get_notices() -> str:
+        """Fetch unread notices and announcements from Wilma."""
+        notices = client.get_notices()
+        return json.dumps(notices, ensure_ascii=False, indent=2)
+
+    return app

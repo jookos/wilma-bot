@@ -1,35 +1,25 @@
 """Entry point — run the MCP server over stdio."""
 
-import asyncio
 import logging
-
-from mcp.server.stdio import stdio_server
 
 from wilma_bot.client import WilmaClient
 from wilma_bot.config import settings
-from wilma_bot.mcp.server import create_server, get_initialization_options
+from wilma_bot.mcp.server import create_server
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
-logger = logging.getLogger(__name__)
 
-
-async def _run() -> None:
-    client = WilmaClient(
-        base_url=settings.base_url,
-        username=settings.username,
-        password=settings.password,
-        timeout=settings.session_timeout,
-    )
-    server = create_server(client)
-    init_opts = get_initialization_options(server)
-
-    async with stdio_server() as (read_stream, write_stream):
-        logger.info("Wilma Bot MCP server started")
-        await server.run(read_stream, write_stream, init_opts)
+# Module-level server instance — required for `mcp dev` discovery.
+_client = WilmaClient(
+    base_url=settings.base_url,
+    username=settings.username,
+    password=settings.password,
+    timeout=settings.session_timeout,
+)
+server = create_server(_client)
 
 
 def main() -> None:
-    asyncio.run(_run())
+    server.run()
 
 
 if __name__ == "__main__":
