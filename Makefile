@@ -28,7 +28,7 @@ image:
 	docker build -t $(IMAGE):$(TAG) .
 
 run-image:
-	docker run -p $(PORT):$(PORT) --env-file .env wilma-bot --http $(PORT)
+	docker run -p $(PORT):$(PORT) --env-file .env $(IMAGE):$(TAG) --http $(PORT)
 
 inspector:
 	npx @modelcontextprotocol/inspector
