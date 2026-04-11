@@ -2,6 +2,8 @@
 
 Wilma Bot is a [Visma Wilma](https://www.visma.fi/inschool/) client packaged as an [MCP](https://modelcontextprotocol.io/) server. It exposes your Wilma inbox, schedule, and notices as tools that any MCP-compatible AI agent (e.g. Claude) can call directly.
 
+It has been developed to provide the author concise updates from wilma when running in an openclaw setup, but can be used in any mcp server supporting environment.
+
 ## Features
 
 - Full Wilma authentication (3-step session flow, auto-refresh)

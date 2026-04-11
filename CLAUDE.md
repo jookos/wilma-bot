@@ -1,4 +1,8 @@
-# CLAUDE.md — Wilma Bot
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Wilma Bot
 
 ## Project overview
 
@@ -99,9 +103,10 @@ wilma-bot> notices   # get_notices
 
 1. Add the client method to `src/wilma_bot/client/wilma.py`.
 2. Add a Pydantic model to `src/wilma_bot/client/models.py` if the response has structure worth preserving.
-3. Add a `Tool` entry to `TOOLS` in `src/wilma_bot/mcp/tools.py`.
-4. Add an async handler function and register it in `REGISTRY`.
-5. Add tests in `tests/test_tools.py`.
+3. Add a `@app.tool()` decorated function inside `create_server()` in `src/wilma_bot/mcp/server.py` — tools are registered directly on the FastMCP instance.
+4. Add tests in `tests/test_tools.py`.
+
+Note: `src/wilma_bot/mcp/tools.py` is vestigial (single comment); tools live entirely in `server.py`.
 
 ## Authentication flow (summary)
 
