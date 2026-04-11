@@ -154,13 +154,7 @@ Copy the skill to OpenClaw's skills directory (adjust path to match your install
 
 ```bash
 mkdir -p ~/.openclaw/skills/wilmabot
-cp stack/skills/wilmabot/SKILL.md ~/.openclaw/skills/wilmabot/SKILL.md
-```
-
-To confirm the correct skills directory, run:
-
-```bash
-openclaw skills --dir
+cp stack/skills/wilmabot/SKILL.md ~/.openclaw/workspace/skills/wilmabot/SKILL.md
 ```
 
 ---
