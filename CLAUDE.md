@@ -4,14 +4,14 @@
 
 Wilma Bot is a Visma Wilma HTTP client packaged as an MCP (Model Context Protocol) server. It authenticates against a school's Wilma instance and exposes inbox messages, week schedule, and notices as MCP tools consumable by AI agents.
 
-The server runs over stdio. There is no web server, no database, and no background process — just a Python process that speaks the MCP protocol.
+The server supports two transports: **stdio** (default, for Claude Code / local MCP clients) and **streamable-HTTP** (`--http <port>`, for remote or networked MCP clients). There is no database and no persistent state beyond the in-memory `WilmaClient` held for the lifetime of the process.
 
 ## Repository layout
 
 ```
 src/wilma_bot/
 ├── __init__.py          # package version
-├── __main__.py          # asyncio entry point (stdio MCP server)
+├── __main__.py          # entry point — stdio or HTTP MCP server (--http <port>)
 ├── config.py            # pydantic-settings — reads WILMA_* env vars / .env
 ├── client/
 │   ├── __init__.py      # re-exports WilmaClient and all model/exception types
@@ -41,9 +41,12 @@ docs/
 # Install (including dev dependencies)
 uv pip install -e ".[dev]"
 
-# Run the MCP server
+# Run the MCP server (stdio)
 wilma-bot
 python -m wilma_bot
+
+# Run as HTTP MCP server on port 8080
+wilma-bot --http 8080
 
 # Tests
 pytest
@@ -55,6 +58,32 @@ ruff format src
 
 # Type check
 mypy src
+
+# Docker
+make image                        # build image (jookos.org/wilma-bot:latest)
+make image IMAGE=myrepo/wilma-bot TAG=v1.0.0
+make run-image                    # docker run with .env on default port (6060)
+```
+
+## Testing the HTTP transport
+
+`test-http.sh` is an interactive curl-based shell for exercising the streamable-HTTP MCP interface:
+
+```bash
+# Start the server in one terminal
+wilma-bot --http 8080
+
+# In another terminal
+./test-http.sh 8080
+```
+
+The script initializes the MCP session (obtaining the `mcp-session-id`) and drops into a REPL:
+
+```
+wilma-bot> list      # tools/list
+wilma-bot> messages  # get_messages
+wilma-bot> schedule  # get_schedule
+wilma-bot> notices   # get_notices
 ```
 
 ## Key design decisions
@@ -63,7 +92,7 @@ mypy src
 - **`pyproject.toml` only** — no `setup.py` or `requirements.txt`.
 - **`pydantic-settings`** — all config from `WILMA_*` env vars; `.env` auto-loaded.
 - **`requests` (sync)** — the Wilma HTTP client is synchronous; the MCP layer wraps calls with `asyncio.to_thread` if needed. MCP tool handlers are `async` but call the blocking client directly (acceptable for a single-user stdio server).
-- **Stdio transport** — matches Claude Code's expected MCP server interface; no networking setup needed.
+- **Dual transport** — stdio (default) for Claude Code / local clients; `--http <port>` enables FastMCP's streamable-HTTP transport (uvicorn, `/mcp` endpoint) for remote clients.
 - **No mocks in json_repair tests** — the repair function is pure; tested end-to-end with real broken JSON strings.
 
 ## Adding a new MCP tool

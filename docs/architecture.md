@@ -5,22 +5,42 @@
 Wilma Bot is a single Python process that:
 
 1. Reads credentials from environment variables on startup.
-2. Starts an MCP server listening on stdio.
+2. Starts an MCP server on **stdio** (default) or as a **streamable-HTTP** server (`--http <port>`).
 3. On each tool call, authenticates against the Wilma HTTP API (if not already), fetches the requested data, and returns it as JSON text.
 
-There is no web server, no database, and no persistent state beyond the in-memory `WilmaClient` instance held for the lifetime of the process.
+There is no database and no persistent state beyond the in-memory `WilmaClient` instance held for the lifetime of the process.
+
+### Stdio transport (default)
 
 ```
 MCP client (Claude / agent)
         │  stdio (JSON-RPC)
         ▼
-  wilma_bot.__main__          asyncio entry point
+  wilma_bot.__main__          entry point
         │
         ▼
-  wilma_bot.mcp.server        MCP Server (list_tools / call_tool)
+  wilma_bot.mcp.server        FastMCP server
         │
         ▼
-  wilma_bot.mcp.tools         tool schemas + async handlers
+  wilma_bot.client.WilmaClient   synchronous HTTP client
+        │  requests.Session
+        ▼
+  Wilma school instance (HTTPS)
+```
+
+### HTTP transport (`--http <port>`)
+
+```
+MCP client (remote agent / curl)
+        │  HTTP POST /mcp  (streamable-HTTP JSON-RPC)
+        ▼
+  uvicorn (embedded in FastMCP)
+        │
+        ▼
+  wilma_bot.__main__          entry point
+        │
+        ▼
+  wilma_bot.mcp.server        FastMCP server
         │
         ▼
   wilma_bot.client.WilmaClient   synchronous HTTP client
@@ -37,13 +57,16 @@ Reads all configuration from `WILMA_*` environment variables (or a `.env` file) 
 
 ### `wilma_bot.__main__`
 
-Entry point. Instantiates `WilmaClient` from `settings`, creates the MCP server, then runs `mcp.server.stdio.stdio_server` inside an `asyncio` event loop. This is the only place where `config` and `mcp` are wired together.
+Entry point. Instantiates `WilmaClient` from `settings` and creates the FastMCP server. Parses a single CLI flag:
+
+- No flags → `server.run()` (stdio, default)
+- `--http <port>` → sets `server.settings.host = "0.0.0.0"` and `server.settings.port`, then calls `server.run(transport="streamable-http")` which starts a uvicorn process serving the MCP endpoint at `/mcp`.
+
+This is the only place where `config` and `mcp` are wired together.
 
 ### `wilma_bot.mcp.server`
 
-Creates a `mcp.server.Server` instance and registers two handlers:
-- `list_tools` — returns the `TOOLS` list from `tools.py`
-- `call_tool` — dispatches by name to the `REGISTRY` dict in `tools.py`
+Creates a `FastMCP` instance and registers tool handlers directly via the `@app.tool()` decorator. FastMCP handles both `list_tools` and `call_tool` dispatch internally.
 
 ### `wilma_bot.mcp.tools`
 
@@ -110,7 +133,7 @@ TextContent(type="text", text=<JSON string>)
 
 | Package | Role |
 |---|---|
-| `mcp[cli]` | MCP server framework and stdio transport |
+| `mcp[cli]` | MCP server framework, FastMCP, stdio and streamable-HTTP transports |
 | `requests` | Synchronous HTTP client for Wilma API calls |
 | `beautifulsoup4` | Available for HTML parsing (imported in client) |
 | `pydantic` | Data models and validation |

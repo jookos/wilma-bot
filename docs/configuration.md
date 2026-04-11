@@ -40,7 +40,9 @@ Each entry has a `url` field — use that as your `WILMA_BASE_URL`.
 
 ## MCP client configuration
 
-When running Wilma Bot as an MCP server from a client such as Claude Code, pass credentials directly as environment variables in the server configuration rather than using a `.env` file:
+### Stdio (Claude Code / local clients)
+
+Pass credentials as environment variables in the server configuration:
 
 ```json
 {
@@ -56,6 +58,18 @@ When running Wilma Bot as an MCP server from a client such as Claude Code, pass 
   }
 }
 ```
+
+### HTTP (remote / networked clients)
+
+Start the server with `--http <port>` (credentials come from `.env` or environment):
+
+```bash
+wilma-bot --http 8080
+```
+
+The MCP endpoint is available at `http://<host>:<port>/mcp`. Configure a remote MCP client to point at that URL. The server binds to `0.0.0.0` so it is reachable from outside the container or host.
+
+See `test-http.sh` for a curl-based interactive test client.
 
 ## Notes
 
