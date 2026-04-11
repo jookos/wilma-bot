@@ -8,7 +8,7 @@ RUN apk add --no-cache gcc musl-dev
 # Install uv for fast dependency resolution
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
-COPY pyproject.toml .
+COPY pyproject.toml README.md ./
 COPY src/ src/
 
 # Install the project and its dependencies into a virtual env
