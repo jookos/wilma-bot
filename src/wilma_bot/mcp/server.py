@@ -44,9 +44,15 @@ def create_server(client: WilmaClient) -> FastMCP:
         return schedule
 
     @app.tool()
-    def get_notices() -> str:
+    def get_notices() -> dict:
         """Fetch unread notices and announcements from Wilma."""
         notices = client.get_notices()
-        return json.dumps(notices, ensure_ascii=False, indent=2)
+        return notices
+
+    @app.tool()
+    def get_notice(notice_id: int) -> dict:
+        """Fetch the full content of a single notice by its id from Wilma."""
+        notice = client.get_notice(notice_id)
+        return notice
 
     return app

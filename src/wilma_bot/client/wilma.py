@@ -10,7 +10,7 @@ from typing import Any
 
 import requests
 
-from wilma_bot.client.data_parser import parse_notices_html
+from wilma_bot.client.data_parser import parse_notice_html, parse_notices_html
 from wilma_bot.client.json_repair import extract_and_repair
 from wilma_bot.client.models import (
     Account,
@@ -228,6 +228,13 @@ class WilmaClient:
         res = self._get(f"{self._slug}/news")
         res.raise_for_status()
         return parse_notices_html(res.text)
+
+    def get_notice(self, notice_id: int) -> dict[str, Any]:
+        """Fetch and parse a single notice by its id."""
+        self._ensure_fresh()
+        res = self._get(f"{self._slug}/news/{notice_id}")
+        res.raise_for_status()
+        return parse_notice_html(res.text, notice_id)
 
     def get_schedule(
         self,

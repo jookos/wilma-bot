@@ -56,8 +56,13 @@ while read -p 'wilma-bot> ' cmd param; do
             tool get_schedule
             ;;
         not*)
-            echo "Fetching notices.."
-            tool get_notices
+            if [ ! "$param" ]; then
+                echo "Fetching notices.."
+                tool get_notices
+            else
+                echo "Fetching notice $param.."
+                tool get_notice '"notice_id":"'"$param"'"'
+            fi
             ;;
         *)
             echo "Commands:"
