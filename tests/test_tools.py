@@ -6,7 +6,13 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from wilma_bot.client.models import Schedule, ScheduleEvent, ScheduleEventDate, ScheduleEventDetails, Term
+from wilma_bot.client.models import (
+    Schedule,
+    ScheduleEvent,
+    ScheduleEventDate,
+    ScheduleEventDetails,
+    Term,
+)
 from wilma_bot.mcp.server import create_server
 
 
@@ -19,8 +25,8 @@ def mock_client() -> MagicMock:
     event = ScheduleEvent(
         id=1,
         date=ScheduleEventDate(
-            start=datetime.datetime(2024, 1, 15, 8, 0, tzinfo=datetime.timezone.utc),
-            end=datetime.datetime(2024, 1, 15, 9, 0, tzinfo=datetime.timezone.utc),
+            start=datetime.datetime(2024, 1, 15, 8, 0, tzinfo=datetime.UTC),
+            end=datetime.datetime(2024, 1, 15, 9, 0, tzinfo=datetime.UTC),
             length_minutes=60,
         ),
         short_name="Math",

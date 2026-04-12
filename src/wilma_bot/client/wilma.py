@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import datetime
 import json
 import logging
@@ -14,9 +15,9 @@ from wilma_bot.client.json_repair import extract_and_repair
 from wilma_bot.client.models import (
     Account,
     AccountInfo,
-    AccountRole,
     Role,
     RoleType,
+    Room,
     Schedule,
     ScheduleEvent,
     ScheduleEventDate,
@@ -25,7 +26,6 @@ from wilma_bot.client.models import (
     Teacher,
     Term,
     WilmaServer,
-    Room,
 )
 
 logger = logging.getLogger(__name__)
@@ -170,10 +170,8 @@ class WilmaClient:
     def logout(self) -> None:
         """Invalidate the server session and clear local state."""
         if self._authenticated:
-            try:
+            with contextlib.suppress(requests.RequestException):
                 self._http.get(f"{self.base_url}/logout", timeout=self.timeout)
-            except requests.RequestException:
-                pass
         self._session_id = None
         self._account = None
         self._roles = []
@@ -340,9 +338,7 @@ class WilmaClient:
 
         location = resp.headers.get("Location", "loginfailed")
         if "loginfailed" in location:
-            raise WilmaAuthError(
-                "Failed to login. Check your account credentials and server url"
-            )
+            raise WilmaAuthError("Failed to login. Check your account credentials and server url")
 
         # Extract Wilma2SID from Set-Cookie
         set_cookie = resp.headers.get("Set-Cookie", "")
@@ -362,9 +358,7 @@ class WilmaClient:
 
     def _fetch_account_and_roles(self) -> tuple[Account, list[Role], str]:
         """Fetch account info and roles after getting Wilma2SID."""
-        account_resp = self._http.get(
-            f"{self.base_url}/api/v1/accounts/me", timeout=self.timeout
-        )
+        account_resp = self._http.get(f"{self.base_url}/api/v1/accounts/me", timeout=self.timeout)
         roles_resp = self._http.get(
             f"{self.base_url}/api/v1/accounts/me/roles", timeout=self.timeout
         )
@@ -418,10 +412,8 @@ class WilmaClient:
                 )
             else:
                 last_login: datetime.datetime | None = None
-                try:
+                with contextlib.suppress(ValueError):
                     last_login = datetime.datetime.fromisoformat(info.last_login)
-                except ValueError:
-                    pass
                 account = Account(
                     id=info.id,
                     firstname=info.firstname,
@@ -477,9 +469,7 @@ class WilmaClient:
         for ev in raw_events:
             # Date: "DD.MM.YYYY" → swap to "MM.DD.YYYY" for parsing
             day, month, year = ev["Date"].split(".")
-            base_ts = datetime.datetime(
-                int(year), int(month), int(day), tzinfo=datetime.timezone.utc
-            )
+            base_ts = datetime.datetime(int(year), int(month), int(day), tzinfo=datetime.UTC)
             tz_delta = datetime.timedelta(hours=tz_hours)
             start_dt = base_ts + datetime.timedelta(minutes=ev["Start"]) - tz_delta
             end_dt = base_ts + datetime.timedelta(minutes=ev["End"]) - tz_delta
@@ -494,12 +484,6 @@ class WilmaClient:
                 for line1 in ev.get("HuoneInfo", {}).values()
                 for r in line1.values()
             ]
-
-            opp_count_raw = ev.get("OppCount", {}).get("0", "0 students")
-            try:
-                student_count = int(opp_count_raw.split(" ")[0])
-            except (ValueError, AttributeError):
-                student_count = 0
 
             creator_raw = ev.get("Lisaaja", {}).get("Nimi", "")
             editor_raw = ev.get("Muokkaaja", {}).get("Nimi", "")
@@ -535,7 +519,7 @@ class WilmaClient:
     # Context manager
     # ------------------------------------------------------------------
 
-    def __enter__(self) -> "WilmaClient":
+    def __enter__(self) -> WilmaClient:
         self.login()
         return self
 

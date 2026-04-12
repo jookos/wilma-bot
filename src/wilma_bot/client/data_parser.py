@@ -50,10 +50,9 @@ def parse_notices_html(html: str) -> dict[str, list[dict[str, Any]]]:
             current_date: str | None = None
             elements = panel_body.find_all(
                 lambda tag: (
-                    tag.name == "h2"
-                    and "no-bottom-padding" in tag.get("class", [])
+                    (tag.name == "h2" and "no-bottom-padding" in tag.get("class", []))
+                    or (tag.name == "div" and "well" in tag.get("class", []))
                 )
-                or (tag.name == "div" and "well" in tag.get("class", []))
             )
             for elem in elements:
                 if elem.name == "h2":
@@ -80,9 +79,9 @@ def parse_notices_html(html: str) -> dict[str, list[dict[str, Any]]]:
                         if m:
                             notice_id = int(m.group(1))
 
-                    author_elem = elem.find(
-                        "span", class_="tooltip"
-                    ) or elem.find("a", class_="profile-link")
+                    author_elem = elem.find("span", class_="tooltip") or elem.find(
+                        "a", class_="profile-link"
+                    )
                     author = author_elem.get("title") if author_elem else None
 
                     current.append(

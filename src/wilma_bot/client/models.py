@@ -3,18 +3,17 @@
 from __future__ import annotations
 
 import datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Any
 
 from pydantic import BaseModel, Field
-
 
 # ---------------------------------------------------------------------------
 # Enums
 # ---------------------------------------------------------------------------
 
 
-class RoleType(str, Enum):
+class RoleType(StrEnum):
     teacher = "teacher"
     student = "student"
     personnel = "personnel"

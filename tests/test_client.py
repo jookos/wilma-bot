@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from wilma_bot.client.wilma import WilmaAuthError, WilmaClient, WilmaSessionError
+from wilma_bot.client.wilma import WilmaAuthError, WilmaClient
 
 
 @pytest.fixture()
@@ -17,7 +17,9 @@ def client() -> WilmaClient:
     )
 
 
-def _make_response(status: int = 200, json_data: object = None, text: str = "", headers: dict | None = None) -> MagicMock:
+def _make_response(
+    status: int = 200, json_data: object = None, text: str = "", headers: dict | None = None
+) -> MagicMock:
     resp = MagicMock()
     resp.status_code = status
     resp.json.return_value = json_data or {}
@@ -29,7 +31,9 @@ def _make_response(status: int = 200, json_data: object = None, text: str = "", 
 
 class TestInitSession:
     def test_returns_session_id_and_version(self, client: WilmaClient) -> None:
-        resp = _make_response(json_data={"LoginResult": "Failed", "SessionID": "abc123", "ApiVersion": 20})
+        resp = _make_response(
+            json_data={"LoginResult": "Failed", "SessionID": "abc123", "ApiVersion": 20}
+        )
         with patch.object(client._http, "get", return_value=resp):
             sid, version = client._init_session()
         assert sid == "abc123"
@@ -37,9 +41,8 @@ class TestInitSession:
 
     def test_non_200_raises(self, client: WilmaClient) -> None:
         resp = _make_response(status=503)
-        with patch.object(client._http, "get", return_value=resp):
-            with pytest.raises(WilmaAuthError):
-                client._init_session()
+        with patch.object(client._http, "get", return_value=resp), pytest.raises(WilmaAuthError):
+            client._init_session()
 
 
 class TestPostCredentials:
@@ -57,48 +60,58 @@ class TestPostCredentials:
 
     def test_loginfailed_in_location_raises(self, client: WilmaClient) -> None:
         resp = self._make_login_resp("/loginfailed")
-        with patch.object(client._http, "post", return_value=resp):
-            with pytest.raises(WilmaAuthError, match="Failed to login"):
-                client._post_credentials("session123")
+        with (
+            patch.object(client._http, "post", return_value=resp),
+            pytest.raises(WilmaAuthError, match="Failed to login"),
+        ):
+            client._post_credentials("session123")
 
     def test_missing_cookie_raises(self, client: WilmaClient) -> None:
         resp = _make_response(status=302, headers={"Location": "/index"})
-        with patch.object(client._http, "post", return_value=resp):
-            with pytest.raises(WilmaAuthError, match="No cookies found"):
-                client._post_credentials("session123")
+        with (
+            patch.object(client._http, "post", return_value=resp),
+            pytest.raises(WilmaAuthError, match="No cookies found"),
+        ):
+            client._post_credentials("session123")
 
 
 class TestLogin:
     def _setup_mocks(self, client: WilmaClient) -> None:
         """Wire up all three login steps with happy-path responses."""
-        init_resp = _make_response(json_data={"LoginResult": "Failed", "SessionID": "sid1", "ApiVersion": 20})
+        init_resp = _make_response(
+            json_data={"LoginResult": "Failed", "SessionID": "sid1", "ApiVersion": 20}
+        )
         login_resp = _make_response(
             status=302,
             headers={"Location": "/index", "Set-Cookie": "Wilma2SID=wilma2; path=/"},
         )
-        account_resp = _make_response(json_data={
-            "payload": {
-                "id": 42,
-                "firstname": "Eero",
-                "lastname": "Esimerkki",
-                "username": "testuser",
-                "lastLogin": "2024-01-15T08:30:00",
-                "sessions": [],
-                "multiFactorAuthentication": False,
-            }
-        })
-        roles_resp = _make_response(json_data={
-            "payload": [
-                {
-                    "name": "Eero Esimerkki",
-                    "type": "student",
-                    "primusId": 42,
-                    "formKey": "fk1",
-                    "slug": "\\profiles\\42",
-                    "schools": [],
+        account_resp = _make_response(
+            json_data={
+                "payload": {
+                    "id": 42,
+                    "firstname": "Eero",
+                    "lastname": "Esimerkki",
+                    "username": "testuser",
+                    "lastLogin": "2024-01-15T08:30:00",
+                    "sessions": [],
+                    "multiFactorAuthentication": False,
                 }
-            ]
-        })
+            }
+        )
+        roles_resp = _make_response(
+            json_data={
+                "payload": [
+                    {
+                        "name": "Eero Esimerkki",
+                        "type": "student",
+                        "primusId": 42,
+                        "formKey": "fk1",
+                        "slug": "\\profiles\\42",
+                        "schools": [],
+                    }
+                ]
+            }
+        )
 
         client._http.get = MagicMock(side_effect=[init_resp, account_resp, roles_resp])
         client._http.post = MagicMock(return_value=login_resp)
@@ -123,17 +136,40 @@ class TestLogin:
 
 class TestContextManager:
     def test_login_and_logout_called(self, client: WilmaClient) -> None:
-        init_resp = _make_response(json_data={"LoginResult": "Failed", "SessionID": "s", "ApiVersion": 20})
+        init_resp = _make_response(
+            json_data={"LoginResult": "Failed", "SessionID": "s", "ApiVersion": 20}
+        )
         login_resp = _make_response(
             status=302,
             headers={"Location": "/index", "Set-Cookie": "Wilma2SID=w; path=/"},
         )
-        account_resp = _make_response(json_data={
-            "payload": {"id": 1, "firstname": "A", "lastname": "B", "username": "a", "lastLogin": "2024-01-01T00:00:00", "sessions": [], "multiFactorAuthentication": False}
-        })
-        roles_resp = _make_response(json_data={
-            "payload": [{"name": "A B", "type": "student", "primusId": 1, "formKey": "f", "slug": "\\s\\1", "schools": []}]
-        })
+        account_resp = _make_response(
+            json_data={
+                "payload": {
+                    "id": 1,
+                    "firstname": "A",
+                    "lastname": "B",
+                    "username": "a",
+                    "lastLogin": "2024-01-01T00:00:00",
+                    "sessions": [],
+                    "multiFactorAuthentication": False,
+                }
+            }
+        )
+        roles_resp = _make_response(
+            json_data={
+                "payload": [
+                    {
+                        "name": "A B",
+                        "type": "student",
+                        "primusId": 1,
+                        "formKey": "f",
+                        "slug": "\\s\\1",
+                        "schools": [],
+                    }
+                ]
+            }
+        )
         logout_resp = _make_response()
 
         client._http.get = MagicMock(side_effect=[init_resp, account_resp, roles_resp, logout_resp])
