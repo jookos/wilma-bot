@@ -147,6 +147,7 @@ class WilmaClient:
             WilmaMFAError: if MFA is enabled on the account.
             WilmaServerError: if the server is invalid or an unsupported version.
         """
+        self._http.cookies.set("Wilma2SID", "")
         if self.validate_server:
             self._check_server()
 
@@ -445,7 +446,9 @@ class WilmaClient:
         try:
             resp = self._get(f"{self._slug}/overview")
         except requests.RequestException as exc:
-            raise WilmaSessionError("Unexpected error while refreshing session") from exc
+            logger.error(f"Unexpected error while refreshing session: {exc}")
+            self._reset_login()
+            return
 
         if resp.status_code != 200:
             raise WilmaSessionError(
@@ -455,11 +458,16 @@ class WilmaClient:
         state = resp.json()
         if state.get("LoginResult") is False:
             logger.info("Session expired, re-authenticating")
-            try:
-                self._authenticated = False
-                self.login()
-            except WilmaError as exc:
-                raise WilmaSessionError("Failed to refresh session") from exc
+            self._reset_login()
+
+    def _reset_login(self) -> None:
+        """Re-login."""
+        try:
+            self._authenticated = False
+            self.login()
+        except WilmaError as exc:
+            raise WilmaSessionError("Failed to refresh session") from exc
+
 
     def _get(
         self,
