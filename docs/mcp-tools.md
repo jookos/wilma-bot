@@ -22,6 +22,51 @@ No parameters.
 
 A JSON array of message objects as returned by the Wilma API. Structure varies by school configuration but typically includes fields such as `Id`, `Subject`, `SendDate`, `SenderName`, and `IsRead`.
 
+---
+
+## `get_message`
+
+Fetch the full content of a single inbox message by its ID.
+
+### Input schema
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "message_id": {
+      "type": "integer",
+      "description": "The numeric ID of the message to fetch."
+    }
+  },
+  "required": ["message_id"]
+}
+```
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `message_id` | integer | Yes | The `Id` value from a `get_messages` result. |
+
+### Output
+
+A JSON object with the full message content as returned by the Wilma API. Typically includes `Subject`, `SendDate`, `SenderName`, `Body` (HTML or plain text), and related metadata.
+
+### Example call (MCP)
+
+```json
+{
+  "method": "tools/call",
+  "params": {
+    "name": "get_message",
+    "arguments": {
+      "message_id": 12345
+    }
+  }
+}
+```
+
 ### Example call (MCP)
 
 ```json
@@ -139,7 +184,7 @@ A JSON object with two keys:
 
 ## `get_notices`
 
-Fetch unread notices and announcements.
+Fetch notices and announcements from the Wilma news board.
 
 ### Input schema
 
@@ -151,7 +196,36 @@ No parameters.
 
 ### Output
 
-A JSON array of notice objects as returned by the Wilma API. Structure varies by school configuration but typically includes fields such as `Id`, `Subject`, `PublishDate`, and `Body`.
+A JSON object with three keys representing the three notice sections on the Wilma news board:
+
+```json
+{
+  "sticky":   [ ... ],
+  "previous": [ ... ],
+  "current":  [ ... ]
+}
+```
+
+#### Sticky / Previous notice object
+
+```json
+{
+  "title": "Annual parent meeting",
+  "id": 8801
+}
+```
+
+#### Current notice object
+
+```json
+{
+  "title": "Annual parent meeting",
+  "id": 8801,
+  "subtitle": "All parents are welcome",
+  "author": "Principal Virtanen",
+  "date": "2024-09-10"
+}
+```
 
 ### Example call (MCP)
 
@@ -161,6 +235,73 @@ A JSON array of notice objects as returned by the Wilma API. Structure varies by
   "params": {
     "name": "get_notices",
     "arguments": {}
+  }
+}
+```
+
+---
+
+## `get_notice`
+
+Fetch the full content of a single notice by its ID.
+
+### Input schema
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "notice_id": {
+      "type": "integer",
+      "description": "The numeric ID of the notice to fetch."
+    }
+  },
+  "required": ["notice_id"]
+}
+```
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|---|---|---|---|
+| `notice_id` | integer | Yes | The `id` value from a `get_notices` result. |
+
+### Output
+
+A JSON object with the full notice content:
+
+```json
+{
+  "id": 8801,
+  "title": "Annual parent meeting",
+  "contentHtml": "<p>Dear parents...</p>",
+  "audience": "Parents of grades 1–6",
+  "publisher": "Principal Virtanen",
+  "date": "2024-09-10",
+  "visibleUntil": "2024-09-20"
+}
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | integer | Notice ID |
+| `title` | string \| null | Notice heading |
+| `contentHtml` | string \| null | Full body as raw HTML |
+| `audience` | string \| null | Target audience text |
+| `publisher` | string \| null | Author / publisher name |
+| `date` | string \| null | Publish date (ISO 8601) |
+| `visibleUntil` | string \| null | Expiry date (ISO 8601) |
+
+### Example call (MCP)
+
+```json
+{
+  "method": "tools/call",
+  "params": {
+    "name": "get_notice",
+    "arguments": {
+      "notice_id": 8801
+    }
   }
 }
 ```

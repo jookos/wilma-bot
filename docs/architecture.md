@@ -84,9 +84,11 @@ The core of the application. A stateful HTTP client that implements the Wilma pr
 | `login()` | 3-step auth: SessionID → credentials POST → Wilma2SID cookie + account/roles |
 | `logout()` | Invalidates the server session and clears local state |
 | `set_role(role)` | Switches the active role slug (by slug string or primusId) |
-| `get_messages()` | `GET {slug}/messages/list` |
+| `get_messages()` | `GET {slug}/messages/list` — returns inbox message list |
+| `get_message(id)` | `GET {slug}/messages/{id}?format=json` — returns full message content |
 | `get_schedule(date)` | `GET {slug}/schedule?date=…` (HTML + JSON repair) + terms |
-| `get_notices()` | `GET {slug}/notices` |
+| `get_notices()` | `GET {slug}/news` — returns sticky, previous, and current notice lists (HTML-parsed) |
+| `get_notice(id)` | `GET {slug}/news/{id}` — returns full notice content (HTML-parsed) |
 | `list_servers()` | Class method — fetches the official Wilma server directory |
 
 Session validity is checked before every data call via `_refresh()` (`GET {slug}/overview`). Expired sessions trigger automatic re-login.

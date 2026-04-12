@@ -57,8 +57,10 @@ See [docs/configuration.md](docs/configuration.md) for details.
 | Tool | Description |
 |---|---|
 | `get_messages` | Fetch the inbox message list |
+| `get_message` | Fetch the full content of a single message by ID |
 | `get_schedule` | Fetch the week schedule and school terms (accepts optional `date`) |
-| `get_notices` | Fetch unread notices and announcements |
+| `get_notices` | Fetch notices and announcements (returns sticky, previous, and current sections) |
+| `get_notice` | Fetch the full content of a single notice by ID |
 
 See [docs/mcp-tools.md](docs/mcp-tools.md) for full schemas and example responses.
 
