@@ -1,7 +1,6 @@
 ---
 name: wilmabot
-description: Check Wilma school messages, schedule, and notices. Triggers on questions about kids' school, teachers, homework, timetable, or anything Wilma-related. Key trigger word: "wilma".
-argument-hint: messages | schedule | notices | new | today | <YYYY-MM-DD>
+description: Check Wilma school messages, schedule, and notices. Triggers on questions about kids school, teachers, homework, timetable, or anything Wilma-related. Key trigger word - wilma.
 ---
 
 You are helping the user monitor their children's school communications via the Wilma school management system. The wilma MCP server is already configured — use the `get_messages`, `get_message`, `get_schedule`, `get_notices`, and `get_notice` tools directly.
@@ -25,8 +24,8 @@ Use the first path that exists. If none exist, create the file at `~/.claude/wil
 Messages and notices can be cached locally so that full content does not need to be fetched again on repeat requests.
 
 - Cache file locations (same directory as the state file):
-  - `wilma-messages-cache.json` — object keyed by message ID (as string), value is the `get_message` response
-  - `wilma-notices-cache.json` — object keyed by notice ID (as string), value is the `get_notice` response
+    - `wilma-messages-cache.json` — object keyed by message ID (as string), value is the `get_message` response
+    - `wilma-notices-cache.json` — object keyed by notice ID (as string), value is the `get_notice` response
 - **Before writing a cache file for the first time**, ask the user for permission: _"May I cache Wilma message/notice content locally at `<path>` so I don't have to re-fetch it? (yes/no)"_ Only create the file if the user says yes; remember the answer for the session.
 - When fetching a message or notice by ID, check the relevant cache first. If the entry exists, use it directly. Otherwise fetch via MCP and (if caching is enabled) append the result to the cache file.
 - Cache entries are permanent — Wilma content does not change after publication.
@@ -81,11 +80,11 @@ Activated when `$ARGUMENTS` contains the word **POLL**.
 2. Call `get_messages`. Sort by `Id` descending. Find all messages with `Id` > `last_seen_message_id`.
 3. Call `get_notices`. Flatten all sections. Find all notices with `id` > `last_seen_notice_id`.
 4. If new messages were found:
-   - Output a notification starting with **"WILMA ALERT:"** followed by the count and subjects, e.g.:
-     `WILMA ALERT: 2 new message(s) — "Re: Field trip permission" from Teacher Smith, "Grade report" from Principal`
+    - Output a notification starting with **"WILMA ALERT:"** followed by the count and subjects, e.g.:
+      `WILMA ALERT: 2 new message(s) — "Re: Field trip permission" from Teacher Smith, "Grade report" from Principal`
 5. If new notices were found:
-   - Output a notification starting with **"WILMA NOTICE:"** followed by the count and titles, e.g.:
-     `WILMA NOTICE: 1 new notice — "Annual parent meeting" by Principal Virtanen`
+    - Output a notification starting with **"WILMA NOTICE:"** followed by the count and titles, e.g.:
+      `WILMA NOTICE: 1 new notice — "Annual parent meeting" by Principal Virtanen`
 6. Update `last_seen_message_id` and `last_seen_notice_id` to the highest IDs seen and write the state file.
 7. If nothing new: produce no output.
 

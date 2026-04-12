@@ -116,7 +116,15 @@ The exact steps depend on your OpenClaw version. Typically you either:
 
 Consult the [OpenClaw documentation](https://github.com/openclaw/openclaw) for the current configuration format.
 
----
+**Note:**
+
+Due to openclaw's recent lack of support for http mcps, wilmabot needs to be run in stdio mode, or used with a bridge, for instance:
+```json
+        "wilma-bot": {
+            "command": "npx",
+            "args": ["@nimbletools/mcp-http-bridge", "--endpoint", "http://wilma-bot:8080/mcp"]
+        }
+```
 
 ## 5. Install the wilmabot skill
 
@@ -153,7 +161,7 @@ any new messages from the school?
 Copy the skill to OpenClaw's skills directory (adjust path to match your installation):
 
 ```bash
-mkdir -p ~/.openclaw/skills/wilmabot
+mkdir -p ~/.openclaw/workspace/skills/wilmabot
 cp stack/skills/wilmabot/SKILL.md ~/.openclaw/workspace/skills/wilmabot/SKILL.md
 ```
 
