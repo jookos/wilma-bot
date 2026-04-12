@@ -31,8 +31,13 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.http is not None:
+        from mcp.server.fastmcp.server import TransportSecuritySettings
+
         server.settings.port = args.http
         server.settings.host = "0.0.0.0"
+        server.settings.transport_security = TransportSecuritySettings(
+            enable_dns_rebinding_protection=False
+        )
         server.run(transport="streamable-http")
     else:
         server.run()
