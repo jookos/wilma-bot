@@ -9,6 +9,7 @@ from typing import Any
 
 import requests
 
+from wilma_bot.client.data_parser import parse_notices_html
 from wilma_bot.client.json_repair import extract_and_repair
 from wilma_bot.client.models import (
     Account,
@@ -216,12 +217,19 @@ class WilmaClient:
         res.raise_for_status()
         return res.json()  # type: ignore[no-any-return]
 
-    def get_notices(self) -> list[dict[str, Any]]:
-        """Return unread notices/announcements."""
+    def get_message(self, message_id: int) -> list[dict[str, Any]]:
+        """Return an inbox message."""
         self._ensure_fresh()
-        res = self._get(f"{self._slug}/notices")
+        res = self._get(f"{self._slug}/messages/{message_id}", params={"format": "json"})
         res.raise_for_status()
         return res.json()  # type: ignore[no-any-return]
+
+    def get_notices(self) -> dict[str, list[dict[str, Any]]]:
+        """Return notices from the news board, split into sticky, previous, and current."""
+        self._ensure_fresh()
+        res = self._get(f"{self._slug}/news")
+        res.raise_for_status()
+        return parse_notices_html(res.text)
 
     def get_schedule(
         self,

@@ -20,14 +20,18 @@ echo "Session: $SESSION"
 
 function tool() {
     local _tool=$1
-    curl -sX POST http://localhost:$port/mcp \
-         -H "Content-Type: application/json" \
-         -H "Accept: application/json, text/event-stream" \
-         -H "mcp-session-id: $SESSION" \
-         -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"'"$_tool"'","arguments":{}}}'
+    local _arg=$2
+    response=$(curl -sX POST http://localhost:$port/mcp \
+                    -H "Content-Type: application/json" \
+                    -H "Accept: application/json, text/event-stream" \
+                    -H "mcp-session-id: $SESSION" \
+                    -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"'"$_tool"'","arguments":{'"$_arg"'}}}')
+    evt=$(echo "$response"|grep ^event:|sed 's/^event: //')
+    echo "---- event type: $evt"
+    echo "$response"|grep ^data:|sed 's/^data: //'|jq -r .result.content[0].text
 } 
 
-while read -p 'wilma-bot> ' cmd; do
+while read -p 'wilma-bot> ' cmd param; do
 
     case $cmd in
         li*)
@@ -39,8 +43,13 @@ while read -p 'wilma-bot> ' cmd; do
                  -d '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}'
             ;;
         mes*)
-            echo "Fetching messages.."
-            tool get_messages
+            if [ ! "$param" ]; then
+                echo "Fetching messages.."
+                tool get_messages
+            else
+                echo "Fetching message $param.."
+                tool get_message '"message_id":"'"$param"'"'
+            fi
             ;;
         sch*)
             echo "Fetching schedule.."

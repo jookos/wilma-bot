@@ -2,7 +2,7 @@ IMAGE ?= jookos.org/wilma-bot
 TAG ?= latest
 PORT ?= 6060
 
-.PHONY: install test lint typecheck dev run docker-build
+.PHONY: install test lint typecheck dev run image run-image inspector run-http
 
 install:
 	uv pip install -e ".[dev]"
@@ -23,6 +23,9 @@ dev:
 
 run:
 	uv run wilma-bot
+
+run-http:
+	uv run wilma-bot --http $(PORT)
 
 image:
 	docker build -t $(IMAGE):$(TAG) .

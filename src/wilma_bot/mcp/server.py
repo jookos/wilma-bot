@@ -18,13 +18,19 @@ def create_server(client: WilmaClient) -> FastMCP:
     app = FastMCP("wilma-bot")
 
     @app.tool()
-    def get_messages() -> str:
+    def get_messages() -> dict:
         """Fetch the inbox message list from Wilma."""
         messages = client.get_messages()
-        return json.dumps(messages, ensure_ascii=False, indent=2)
+        return messages
 
     @app.tool()
-    def get_schedule(date: str | None = None) -> str:
+    def get_message(message_id: int) -> dict:
+        """Fetches the contents of a message by its id from Wilma."""
+        messages = client.get_message(message_id)
+        return messages
+
+    @app.tool()
+    def get_schedule(date: str | None = None) -> dict:
         """Fetch the week schedule and school terms from Wilma.
 
         Returns parsed lesson events with teacher, room, and time details.
@@ -35,7 +41,7 @@ def create_server(client: WilmaClient) -> FastMCP:
         """
         parsed_date = datetime.date.fromisoformat(date) if date else None
         schedule = client.get_schedule(date=parsed_date)
-        return json.dumps(schedule.model_dump(mode="json"), ensure_ascii=False, indent=2)
+        return schedule
 
     @app.tool()
     def get_notices() -> str:
