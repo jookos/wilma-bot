@@ -6,6 +6,7 @@ dist/
 build/
 .venv/
 venv/
+external/
 
 # Env / secrets
 .env
