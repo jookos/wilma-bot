@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html><head><title>Viikkonakyma</title></head>
+<body>
+<h1>Viikkonakyma: {{ date|default('22.04.2024') }}</h1>
+<script>
+var eventsJSON = {{ schedule_data|tojson }};
+</script>
+</body>
+</html>

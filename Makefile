@@ -1,8 +1,9 @@
 IMAGE ?= jookos.org/wilma-bot
 TAG ?= latest
 PORT ?= 6060
+MOCK_PORT ?= 9090
 
-.PHONY: install test lint typecheck dev run image run-image inspector run-http
+.PHONY: install test lint typecheck dev run image run-image inspector run-http run-mock
 
 install:
 	uv pip install -e ".[dev]"
@@ -26,6 +27,13 @@ run:
 
 run-http:
 	uv run wilma-bot --http $(PORT)
+
+run-http-mock:
+	WILMA_ENV_FILE=.env-mock uv run wilma-bot --http $(PORT)
+
+run-mock:
+	uv run python -m wilma_bot.mock_server --port $(MOCK_PORT)
+
 
 image:
 	docker build -t $(IMAGE):$(TAG) .

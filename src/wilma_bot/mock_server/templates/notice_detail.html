@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head><title>Ilmoitus</title></head>
+<body>
+<div class="col-lg-8">
+  <div class="panel"><div class="panel-body">
+    <h2>{{ notice_title|default('Mock-ilmoitus') }}</h2>
+    <hr>
+    <div class="margin-bottom">{{ notice_audience|default('Kaikki') }}</div>
+    <div class="horizontal-link-container">
+      <span class="icon"></span>
+      <span>{{ notice_publisher|default('Mock Opastaja') }}</span>
+      <span class="pull-right">Julkaistu {{ notice_date|default('10.4.') }}</span>
+      <span class="pull-right">Poistuu {{ notice_visible_until|default('15.5.') }}</span>
+    </div>
+    <div id="news-content">
+      {{ notice_content|default('<p>Tama on mock-ilmoitus.</p>')|safe }}
+    </div>
+  </div></div>
+</div>
+</body>
+</html>

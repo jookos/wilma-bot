@@ -1,3 +1,5 @@
+import os
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -11,4 +13,4 @@ class Settings(BaseSettings):
     session_timeout: int = 30
 
 
-settings = Settings()  # type: ignore[call-arg]
+settings = Settings(_env_file=os.environ.get("WILMA_ENV_FILE", ".env"))  # type: ignore[call-arg]

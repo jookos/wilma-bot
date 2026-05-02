@@ -101,6 +101,7 @@ def create_server(client: WilmaClient) -> FastMCP:
                 continue
             filtered.append(msg)
 
+        print(f'Returning {len(filtered)} messages ({len(messages)} got)')
         if isinstance(result, dict):
             return {**result, "Messages": filtered}
         return filtered  # type: ignore[return-value]

@@ -213,6 +213,7 @@ class WilmaClient:
         """Return inbox messages."""
         self._ensure_fresh()
         res = self._get(f"{self._slug}/messages/list")
+        print(f'got {res.text}')
         res.raise_for_status()
         return res.json()  # type: ignore[no-any-return]
 
@@ -344,23 +345,33 @@ class WilmaClient:
             timeout=self.timeout,
         )
 
-        location = resp.headers.get("Location", "loginfailed")
+        location = resp.headers.get("Location", "loginfailed").lower()
         if "loginfailed" in location:
             raise WilmaAuthError("Failed to login. Check your account credentials and server url")
 
-        # Extract Wilma2SID from Set-Cookie
-        set_cookie = resp.headers.get("Set-Cookie", "")
-        if not set_cookie:
-            raise WilmaAuthError("No cookies found")
+        # Extract Wilma2SID from cookies
+        # Use a more specific retrieval to avoid "multiple cookies with name" errors
+        wilma2sid = None
+        for cookie in self._http.cookies:
+            if cookie.name == "Wilma2SID":
+                wilma2sid = cookie.value
+                # If we have multiple, the root path or the most recent one is usually what we want.
+                # For Wilma, there's typically only one valid session cookie.
+                break
 
-        try:
-            wilma2sid = next(
-                part.split("=", 1)[1].split(";")[0]
-                for part in set_cookie.split(", ")
-                if part.startswith("Wilma2SID=")
-            )
-        except StopIteration as exc:
-            raise WilmaAuthError("Failed to parse session cookies") from exc
+        if not wilma2sid:
+            # Fallback to manual parsing if it's not in the jar for some reason
+            set_cookie = resp.headers.get("Set-Cookie", "")
+            if not set_cookie:
+                raise WilmaAuthError("No cookies found")
+            try:
+                wilma2sid = next(
+                    part.split("=", 1)[1].split(";")[0]
+                    for part in set_cookie.split(", ")
+                    if part.strip().startswith("Wilma2SID=")
+                )
+            except StopIteration as exc:
+                raise WilmaAuthError("Failed to parse session cookies") from exc
 
         return wilma2sid
 

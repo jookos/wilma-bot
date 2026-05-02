@@ -1,0 +1,10 @@
+[
+  {
+    "MessageID": "{{ message_id|default(1001) }}",
+    "Title": "{{ message_title|default('Otsikko') }}",
+    "Body": "<p>Viesti kayttajalle {{ username }}.</p>",
+    "From": "Mock Sender",
+    "TimeStamp": "2024-01-15 08:30",
+    "Attachments": []
+  }
+]

@@ -1,0 +1,47 @@
+api_version: 20
+
+users:
+  - username: testuser
+    password: testpass
+    account:
+      id: 42
+      firstname: Eero
+      lastname: Esimerkki
+      username: eero.esimerkki
+      last_login: "2024-01-15T08:30:00"
+    roles:
+      - type: student
+        id: 42
+        slug: "profiles/42"
+        form_key: "fk1"
+        schools:
+          - id: 1
+            caption: Test School
+            features: [schedule, messages]
+      - type: guardian
+        id: 41
+        slug: "\\profiles\\41"
+        form_key: "fk2"
+        schools:
+          - id: 1
+            caption: Test School
+    session_timeout: false
+    login_fail: false
+    templates: {}
+
+# messages: generate random messages spread over a timespan
+# Omit this section to use the built-in templates/messages_list.json (2 messages)
+messages:
+  count: 30
+  timespan: 1y
+# Or load from a file:
+# messages:
+#   file: path/to/messages.json
+
+schedule_export:
+  - name: "Kevät 2024"
+    start_date: "2024-01-08T00:00:00"
+    end_date: "2024-05-15T00:00:00"
+  - name: "Syksy 2024"
+    start_date: "2024-08-12T00:00:00"
+    end_date: "2024-12-15T00:00:00"

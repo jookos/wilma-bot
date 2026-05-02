@@ -1,0 +1,25 @@
+{
+  "Messages": [
+    {
+      "Id": 1001,
+      "Subject": "Tervetuloa kouluun",
+      "TimeStamp": "2024-01-15 08:30",
+      "Folder": "inbox",
+      "SenderId": 101,
+      "SenderType": 1,
+      "Sender": "Virtanen Matti (MV)",
+      "Senders": [{"Name": "Virtanen Matti (MV)", "Href": "/profiles/teachers/101"}]
+    },
+    {
+      "Id": 1002,
+      "Subject": "Kevättapahtumat",
+      "TimeStamp": "2024-02-20 14:00",
+      "Folder": "inbox",
+      "SenderId": 102,
+      "SenderType": 1,
+      "Sender": "Korhonen Anna (AK)",
+      "Senders": [{"Name": "Korhonen Anna (AK)", "Href": "/profiles/teachers/102"}]
+    }
+  ],
+  "Status": 200
+}

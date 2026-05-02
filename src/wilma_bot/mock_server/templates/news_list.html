@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head><title>Ilmoitustaulu</title></head>
+<body>
+<div class="row">
+  <div class="col-lg-4">
+    <div class="panel"><div class="panel-body">
+      <h2>Pysyvät ilmoitukset</h2>
+      {% for n in sticky_notices %}
+      <div class="well"><h3><a class="link-with-arrow" href="/news/{{ n.id }}">{{ n.title }}</a></h3></div>
+      {% endfor %}
+    </div></div>
+  </div>
+  <div class="col-lg-8">
+    <div class="tab-content">
+      <div class="panel-body">
+        {% for n in current_notices %}
+        <h2 class="no-bottom-padding">{{ n.date }}</h2>
+        <div class="well">
+          <h3>{{ n.title }}</h3>
+          {% if n.subtitle %}<p class="sub-text">{{ n.subtitle }}</p>{% endif %}
+          <a href="/news/{{ n.id }}" class="link-with-arrow">Lue lisää</a>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

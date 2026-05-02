@@ -1,0 +1,1 @@
+{"Schedule": {{ schedule_export|tojson if schedule_export else "[]" }}, "Terms": {{ schedule_terms|tojson if schedule_terms else "[]" }}}

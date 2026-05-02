@@ -30,6 +30,8 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    print(f"Connecting to Wilma: {settings.base_url}")
+
     if args.http is not None:
         from mcp.server.fastmcp.server import TransportSecuritySettings
 
