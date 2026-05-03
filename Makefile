@@ -42,4 +42,4 @@ run-image:
 	docker run -p $(PORT):$(PORT) --env-file .env $(IMAGE):$(TAG) --http $(PORT)
 
 inspector:
-	npx @modelcontextprotocol/inspector
+	npx @modelcontextprotocol/inspector --remote-url http://localhost:$(PORT)/mcp

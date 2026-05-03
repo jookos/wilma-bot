@@ -23,6 +23,7 @@ class Role:
     id: int
     slug: str
     form_key: str
+    name: str = ""
     schools: list = field(default_factory=list)
 
 

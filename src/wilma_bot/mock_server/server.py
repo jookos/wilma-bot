@@ -157,7 +157,7 @@ def configure_server(config_path):
             ]
             roles.append(
                 {
-                    "name": str(r.id),
+                    "name": r.name or str(r.id),
                     "type": r.type,
                     "primusId": r.id,
                     "formKey": r.form_key,

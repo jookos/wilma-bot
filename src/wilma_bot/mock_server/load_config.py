@@ -21,6 +21,7 @@ def load_config(path="mock-config.yaml"):
                         id=r["id"],
                         slug=r["slug"],
                         form_key=r["form_key"],
+                        name=r.get("name", str(r["id"])),
                         schools=[School(**s) for s in r.get("schools", [])],
                     )
                     for r in u["roles"]

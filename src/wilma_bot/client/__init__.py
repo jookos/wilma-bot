@@ -1,6 +1,7 @@
 from wilma_bot.client.models import (
     Account,
     AccountRole,
+    Guardee,
     Role,
     RoleType,
     Schedule,
@@ -20,6 +21,7 @@ from wilma_bot.client.wilma import (
 __all__ = [
     "Account",
     "AccountRole",
+    "Guardee",
     "Role",
     "RoleType",
     "Schedule",

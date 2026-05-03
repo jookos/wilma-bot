@@ -20,6 +20,7 @@ users:
             features: [schedule, messages]
       - type: guardian
         id: 41
+        name: "Jonne Jonatan"
         slug: "\\profiles\\41"
         form_key: "fk2"
         schools:

@@ -6,6 +6,9 @@ from unittest.mock import MagicMock
 import pytest
 
 from wilma_bot.client.models import (
+    Guardee,
+    Role,
+    RoleType,
     Schedule,
     ScheduleEvent,
     ScheduleEventDate,
@@ -20,6 +23,14 @@ def mock_client() -> MagicMock:
     client = MagicMock()
     client.get_messages.return_value = [{"id": 1, "subject": "Hello"}]
     client.get_notices.return_value = [{"title": "Test notice"}]
+    client.get_guardees.return_value = [
+        Guardee(id=101, name="Alice"),
+        Guardee(id=102, name="Bob"),
+    ]
+    client.roles = [
+        Role(id=101, name="Alice", type=RoleType.guardian, is_default=True, slug="profiles/101", form_key="fk101"),
+        Role(id=102, name="Bob", type=RoleType.guardian, is_default=False, slug="profiles/102", form_key="fk102"),
+    ]
 
     event = ScheduleEvent(
         id=1,
@@ -108,14 +119,77 @@ def test_get_messages_since_and_until(tools: dict, mock_client: MagicMock) -> No
 def test_get_schedule_no_date(tools: dict, mock_client: MagicMock) -> None:
     result = tools["get_schedule"]()
     assert result.events[0].short_name == "Math"
-    mock_client.get_schedule.assert_called_once_with(date=None)
+    mock_client.get_schedule.assert_called_once_with(date=None, slug=None)
 
 
 def test_get_schedule_with_date(tools: dict, mock_client: MagicMock) -> None:
     tools["get_schedule"](date="2024-01-15")
-    mock_client.get_schedule.assert_called_once_with(date=datetime.date(2024, 1, 15))
+    mock_client.get_schedule.assert_called_once_with(date=datetime.date(2024, 1, 15), slug=None)
 
 
 def test_get_notices(tools: dict, mock_client: MagicMock) -> None:
     result = tools["get_notices"]()
     assert result[0]["title"] == "Test notice"
+
+
+def test_get_guardees_returns_list(tools: dict, mock_client: MagicMock) -> None:
+    result = tools["get_guardees"]()
+    assert result == [{"id": 101, "name": "Alice"}, {"id": 102, "name": "Bob"}]
+    mock_client.get_guardees.assert_called_once_with()
+
+
+def test_get_guardees_empty(tools: dict, mock_client: MagicMock) -> None:
+    mock_client.get_guardees.return_value = []
+    result = tools["get_guardees"]()
+    assert result == []
+
+
+def test_get_messages_with_guardee_id(tools: dict, mock_client: MagicMock) -> None:
+    mock_client.get_messages.return_value = SAMPLE_MESSAGES
+    tools["get_messages"](guardee_id=101)
+    mock_client.get_messages.assert_called_once_with(slug="profiles/101")
+
+
+def test_get_messages_invalid_guardee_id(tools: dict, mock_client: MagicMock) -> None:
+    with pytest.raises(ValueError, match="No guardian role found with id=999"):
+        tools["get_messages"](guardee_id=999)
+
+
+def test_get_notices_with_guardee_id(tools: dict, mock_client: MagicMock) -> None:
+    tools["get_notices"](guardee_id=102)
+    mock_client.get_notices.assert_called_once_with(slug="profiles/102")
+
+
+def test_get_notices_invalid_guardee_id(tools: dict, mock_client: MagicMock) -> None:
+    with pytest.raises(ValueError, match="No guardian role found"):
+        tools["get_notices"](guardee_id=9999)
+
+
+def test_get_schedule_with_guardee_id(tools: dict, mock_client: MagicMock) -> None:
+    tools["get_schedule"](guardee_id=101)
+    mock_client.get_schedule.assert_called_once_with(date=None, slug="profiles/101")
+
+
+def test_get_schedule_invalid_guardee_id(tools: dict, mock_client: MagicMock) -> None:
+    with pytest.raises(ValueError, match="No guardian role found"):
+        tools["get_schedule"](guardee_id=9999)
+
+
+def test_get_message_with_guardee_id(tools: dict, mock_client: MagicMock) -> None:
+    tools["get_message"](message_id=42, guardee_id=101)
+    mock_client.get_message.assert_called_once_with(42, slug="profiles/101")
+
+
+def test_get_message_without_guardee_id(tools: dict, mock_client: MagicMock) -> None:
+    tools["get_message"](message_id=42)
+    mock_client.get_message.assert_called_once_with(42, slug=None)
+
+
+def test_get_notice_with_guardee_id(tools: dict, mock_client: MagicMock) -> None:
+    tools["get_notice"](notice_id=7, guardee_id=102)
+    mock_client.get_notice.assert_called_once_with(7, slug="profiles/102")
+
+
+def test_get_notice_without_guardee_id(tools: dict, mock_client: MagicMock) -> None:
+    tools["get_notice"](notice_id=7)
+    mock_client.get_notice.assert_called_once_with(7, slug=None)

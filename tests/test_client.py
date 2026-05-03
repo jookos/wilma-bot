@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from wilma_bot.client.models import Guardee, Role, RoleType
 from wilma_bot.client.wilma import WilmaAuthError, WilmaClient
 
 
@@ -178,3 +179,31 @@ class TestContextManager:
         with client:
             assert client._authenticated is True
         assert client._authenticated is False
+
+
+class TestGetGuardees:
+    def _make_role(self, id: int, name: str, role_type: RoleType) -> Role:
+        return Role(id=id, name=name, type=role_type, is_default=(id == 1), slug=f"profiles/{id}", form_key=f"fk{id}")
+
+    def test_returns_only_guardian_roles(self, client: WilmaClient) -> None:
+        roles = [
+            self._make_role(1, "Student Self", RoleType.student),
+            self._make_role(101, "Alice Child", RoleType.guardian),
+            self._make_role(102, "Bob Child", RoleType.guardian),
+        ]
+        client._roles = roles
+        with patch.object(client, "_ensure_fresh"):
+            result = client.get_guardees()
+        assert result == [Guardee(id=101, name="Alice Child"), Guardee(id=102, name="Bob Child")]
+
+    def test_returns_empty_when_no_guardian_roles(self, client: WilmaClient) -> None:
+        client._roles = [self._make_role(1, "Student Self", RoleType.student)]
+        with patch.object(client, "_ensure_fresh"):
+            result = client.get_guardees()
+        assert result == []
+
+    def test_returns_empty_when_roles_empty(self, client: WilmaClient) -> None:
+        client._roles = []
+        with patch.object(client, "_ensure_fresh"):
+            result = client.get_guardees()
+        assert result == []

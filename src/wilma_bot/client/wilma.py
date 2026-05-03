@@ -15,6 +15,7 @@ from wilma_bot.client.json_repair import extract_and_repair
 from wilma_bot.client.models import (
     Account,
     AccountInfo,
+    Guardee,
     Role,
     RoleType,
     Room,
@@ -209,32 +210,44 @@ class WilmaClient:
     # API calls
     # ------------------------------------------------------------------
 
-    def get_messages(self) -> list[dict[str, Any]]:
+    def get_guardees(self) -> list[Guardee]:
+        """Return a list of children this guardian account is guarding."""
+        self._ensure_fresh()
+        return [
+            Guardee(id=role.id, name=role.name)
+            for role in self._roles
+            if role.type == RoleType.guardian
+        ]
+
+    def get_messages(self, slug: str | None = None) -> list[dict[str, Any]]:
         """Return inbox messages."""
         self._ensure_fresh()
-        res = self._get(f"{self._slug}/messages/list")
-        print(f'got {res.text}')
+        effective_slug = slug if slug is not None else self._slug
+        res = self._get(f"{effective_slug}/messages/list")
         res.raise_for_status()
         return res.json()  # type: ignore[no-any-return]
 
-    def get_message(self, message_id: int) -> list[dict[str, Any]]:
+    def get_message(self, message_id: int, slug: str | None = None) -> list[dict[str, Any]]:
         """Return an inbox message."""
         self._ensure_fresh()
-        res = self._get(f"{self._slug}/messages/{message_id}", params={"format": "json"})
+        effective_slug = slug if slug is not None else self._slug
+        res = self._get(f"{effective_slug}/messages/{message_id}", params={"format": "json"})
         res.raise_for_status()
         return res.json()  # type: ignore[no-any-return]
 
-    def get_notices(self) -> dict[str, list[dict[str, Any]]]:
+    def get_notices(self, slug: str | None = None) -> dict[str, list[dict[str, Any]]]:
         """Return notices from the news board, split into sticky, previous, and current."""
         self._ensure_fresh()
-        res = self._get(f"{self._slug}/news")
+        effective_slug = slug if slug is not None else self._slug
+        res = self._get(f"{effective_slug}/news")
         res.raise_for_status()
         return parse_notices_html(res.text)
 
-    def get_notice(self, notice_id: int) -> dict[str, Any]:
+    def get_notice(self, notice_id: int, slug: str | None = None) -> dict[str, Any]:
         """Fetch and parse a single notice by its id."""
         self._ensure_fresh()
-        res = self._get(f"{self._slug}/news/{notice_id}")
+        effective_slug = slug if slug is not None else self._slug
+        res = self._get(f"{effective_slug}/news/{notice_id}")
         res.raise_for_status()
         return parse_notice_html(res.text, notice_id)
 
@@ -242,6 +255,7 @@ class WilmaClient:
         self,
         date: datetime.date | None = None,
         timezone_offset_hours: int = 3,
+        slug: str | None = None,
     ) -> Schedule:
         """Fetch the week schedule and terms for a given date.
 
@@ -250,17 +264,19 @@ class WilmaClient:
                   Defaults to today.
             timezone_offset_hours: Timezone offset added when computing UTC datetimes.
                   Default is 3 (UTC+3, Helsinki time).
+            slug: Optional role slug override. Defaults to the active slug.
 
         Returns:
             A :class:`Schedule` containing events and terms.
         """
         self._ensure_fresh()
+        effective_slug = slug if slug is not None else self._slug
 
         if date is None:
             date = datetime.date.today()
 
         date_param = f"{date.day}.{date.month}.{date.year}"
-        res = self._get(f"{self._slug}/schedule", params={"date": date_param})
+        res = self._get(f"{effective_slug}/schedule", params={"date": date_param})
 
         if res.status_code == 403:
             raise WilmaError("Unauthorized")
@@ -278,7 +294,7 @@ class WilmaClient:
 
         # Fetch terms
         account_id = self.account.id
-        terms_res = self._get(f"{self._slug}/schedule/export/students/{account_id}/")
+        terms_res = self._get(f"{effective_slug}/schedule/export/students/{account_id}/")
 
         if terms_res.status_code == 403:
             raise WilmaError("Unauthorized")
